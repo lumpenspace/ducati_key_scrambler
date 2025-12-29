@@ -1,7 +1,9 @@
 /*
- * Ducati Scrambler Code Entry - Configuration
+ * Ducati Scrambler Code Entry / Bruteforce - Configuration
  * 
- * Edit this file to match your board and wiring
+ * For: ducati_code_entry.ino and ducati_bruteforce.ino
+ * 
+ * NOTE: The Bluetooth fob uses a SEPARATE config file (config_fob.h)
  */
 
 #ifndef CONFIG_H
@@ -90,4 +92,6 @@ const int RELAY_ON = LOW;
 const int RELAY_OFF = HIGH;
 
 #endif // CONFIG_H
+
+
 
