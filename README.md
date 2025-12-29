@@ -29,9 +29,15 @@ Bruteforce the 4-digit security code when you've forgotten it or lost your fob.
 Turn your phone into a wireless key fob. Automatically enters your code when you approach the bike.
 
 - **Use case:** Permanent key fob replacement
-- **Hardware:** ESP32 + 2 relays + optional LiPo battery
+- **Hardware:** ESP32 + 2 relays
 - **Time:** Set up once, works forever
 - **Result:** Phone = Key
+
+Two variants:
+| Sketch | Power | Description |
+|--------|-------|-------------|
+| `ducati_unlocker.ino` | Bike 12V | Simple! Scans when you turn the key |
+| `ducati_bluetooth_fob.ino` | Battery/USB | Always on, continuous scanning |
 
 ## Quick Comparison
 
