@@ -2,15 +2,12 @@
 
 DIY tools for Ducati Scrambler owners who've lost their key fob.
 
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                                                                         │
-│   🔑 Lost your Ducati key fob?                                          │
-│                                                                         │
-│   Step 1: Recover your code    →  ducati_code_entry/                    │
-│   Step 2: Never need it again  →  ducati_bluetooth_fob/                 │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+  A["🔑 Lost your Ducati key fob?"]
+  B["Step 1: Recover your code<br/>ducati_code_entry/"]
+  C["Step 2: Never need it again<br/>ducati_unlocker/"]
+  A --> B --> C
 ```
 
 ## Projects
@@ -24,81 +21,50 @@ Bruteforce the 4-digit security code when you've forgotten it or lost your fob.
 - **Time:** Up to 11 hours (worst case)
 - **Result:** Your 4-digit code
 
-### [ducati_bluetooth_fob/](ducati_bluetooth_fob/) — Bluetooth Key Fob
+### [ducati_unlocker/](ducati_unlocker/) — Secure Unlock System ⭐
 
-Turn your phone into a wireless key fob. Automatically enters your code when you approach the bike.
+The definitive solution. Press a button, phone detected, bike unlocks.
 
 - **Use case:** Permanent key fob replacement
-- **Hardware:** ESP32 + 2 relays
-- **Time:** Set up once, works forever
-- **Result:** Phone = Key
-
-Two variants:
-| Sketch | Power | Description |
-|--------|-------|-------------|
-| `ducati_unlocker.ino` | Bike 12V | Simple! Scans when you turn the key |
-| `ducati_bluetooth_fob.ino` | Battery/USB | Always on, continuous scanning |
-
-## Quick Comparison
-
-| Feature | Code Entry | Bluetooth Fob |
-|---------|------------|---------------|
-| Purpose | Recover forgotten code | Replace key fob |
-| Relays needed | 3 | 2 |
-| Power cycling | Yes | No |
-| Bluetooth | No | Yes |
-| Battery powered | No (use charger) | Optional (LiPo) |
-| One-time use | Yes | No (permanent) |
+- **Hardware:** XIAO ESP32C6 (default) or ESP32 DevKit V1 + 2 relays/optos
+- **Flow:** Phone connects → Press button → Enter code
+- **Result:** Phone = Key (bonded BLE HID + manual trigger)
 
 ## Workflow
 
-```
-┌──────────────────┐     ┌───────────────────┐     ┌──────────────────┐
-│                  │     │                   │     │                  │
-│  Lost key fob    │────►│  Bruteforce code  │────►│  Know your code  │
-│                  │     │  (ducati_code_    │     │                  │
-│                  │     │   entry)          │     │                  │
-└──────────────────┘     └───────────────────┘     └────────┬─────────┘
-                                                            │
-                                                            ▼
-                                                  ┌──────────────────┐
-                                                  │                  │
-                                                  │  Set up BT fob   │
-                                                  │  (ducati_        │
-                                                  │   bluetooth_fob) │
-                                                  │                  │
-                                                  └────────┬─────────┘
-                                                            │
-                                                            ▼
-                                                  ┌──────────────────┐
-                                                  │                  │
-                                                  │  Phone = Key 📱  │
-                                                  │                  │
-                                                  └──────────────────┘
+```mermaid
+flowchart TB
+  A["Lost key fob"]
+  B["Bruteforce code<br/>(ducati_code_entry)"]
+  C["Know your code"]
+  D["Set up Unlocker<br/>(ducati_unlocker) ⭐"]
+  E["Phone = Key 📱<br/>Press button, bike unlocks!"]
+  A --> B --> C --> D --> E
 ```
 
 ## Hardware Overview
 
 ### For Code Recovery (3 relays)
 
-```
-ESP32 ──► Relay 1 (INCREASE) ──► Bike button wire
-      ──► Relay 2 (MOVE)     ──► Bike button wire  
-      ──► Relay 3 (POWER)    ──► Power cycling
+```mermaid
+flowchart LR
+  ESP["ESP32"] --> R1["Relay 1 (INCREASE)"] --> BW1["Bike button wire"]
+  ESP --> R2["Relay 2 (MOVE)"] --> BW2["Bike button wire"]
+  ESP --> R3["Relay 3 (POWER)"] --> PWR["Power cycling"]
 ```
 
-### For Bluetooth Fob (2 relays)
+### For Unlocker (2-relay/optocoupler) ⭐
 
-```
-ESP32 ──► Relay 1 (INCREASE) ──► Bike button wire
-      ──► Relay 2 (MOVE)     ──► Bike button wire
-      
-📱 Phone (Bluetooth) ──► ESP32 detects proximity ──► Enters code
+```mermaid
+flowchart LR
+  ESP["ESP32-C6/DevKit"] --> R1["Relay 1 (INCREASE)"] --> BW1["Bike button wire"]
+  ESP --> R2["Relay 2 (CONFIRM)"] --> BW2["Bike button wire"]
+  Phone["📱 Phone (BLE bonded)"] --> Conn["Connects"] --> Btn["Press button"] --> Code["Enter code"]
 ```
 
 ## Requirements
 
-- **ESP32-S3** (with Bluetooth) or Arduino
+- **ESP32 with Bluetooth** (for unlocker) or Arduino (for code entry)
 - **Relay modules** (SRD-05VDC or automotive relays)
 - **Multimeter** (to find the right wires)
 - **Soldering iron** (optional, for permanent install)
@@ -111,4 +77,3 @@ These tools are for **legitimate owners only**. Using them on a vehicle you don'
 ## License
 
 MIT - Use at your own risk.
-

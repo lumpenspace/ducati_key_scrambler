@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+    :root {
+        --board-bg: #fdfdfd;
+        --hole-color: #2a2a2a;
+        --hole-shadow: inset 1px 1px 2px rgba(0,0,0,0.8);
+        --highlight: #4caf50; /* Green highlight for connectivity */
+        --strip-gap: 20px;
+        --red-line: #e74c3c;
+        --blue-line: #3498db;
+    }
+
+    body {
+        font-family: monospace;
+        background-color: #333;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+    }
+
+    /* The Breadboard Container */
+    .breadboard {
+        background-color: var(--board-bg);
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        display: flex;
+        gap: 10px;
+        position: relative;
+        user-select: none;
+    }
+
+    /* Common Hole Styling */
+    .hole {
+        width: 12px;
+        height: 12px;
+        background-color: var(--hole-color);
+        box-shadow: var(--hole-shadow);
+        border-radius: 2px;
+        margin: 3px;
+        cursor: pointer;
+        transition: background 0.1s;
+    }
+
+    /* --- Power Rails (Bus Strips) --- */
+    .power-rail {
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        padding: 0 5px;
+        position: relative;
+    }
+
+    .power-col {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    /* Connectivity: Power Rails are connected Vertically */
+    .power-col:hover .hole {
+        background-color: var(--highlight);
+        box-shadow: 0 0 5px var(--highlight);
+    }
+
+    /* Colored Lines for Rails */
+    .line-pos {
+        width: 2px;
+        height: 100%;
+        background-color: var(--red-line);
+        position: absolute;
+        left: 10px;
+        top: 0;
+        z-index: 0;
+    }
+    .line-neg {
+        width: 2px;
+        height: 100%;
+        background-color: var(--blue-line);
+        position: absolute;
+        right: 10px;
+        top: 0;
+        z-index: 0;
+    }
+    
+    .rail-label {
+        font-weight: bold;
+        margin-bottom: 5px;
+        font-size: 14px;
+    }
+    .pos-label { color: var(--red-line); }
+    .neg-label { color: var(--blue-line); }
+
+
+    /* --- Main Terminal Area --- */
+    .terminal-area {
+        display: flex;
+        flex-direction: column;
+        background: #f5f5f5;
+        border-left: 1px solid #ddd;
+        border-right: 1px solid #ddd;
+        padding: 0 5px;
+    }
+
+    /* The Row (5 connected holes) */
+    .row {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 0;
+    }
+
+    /* Connectivity: Terminal Rows are connected Horizontally */
+    .row:hover .hole {
+        background-color: var(--highlight);
+        box-shadow: 0 0 5px var(--highlight);
+    }
+
+    .row-label {
+        width: 20px;
+        text-align: right;
+        font-size: 10px;
+        color: #888;
+        margin-right: 5px;
+    }
+
+    /* --- Center Divider --- */
+    .divider {
+        width: 20px;
+        background: #e0e0e0;
+        box-shadow: inset 2px 0 3px rgba(0,0,0,0.1), inset -2px 0 3px rgba(0,0,0,0.1);
+    }
+
+</style>
+</head>
+<body>
+
+<div class="breadboard">
+
+    <div class="power-rail">
+        <div class="power-col">
+            <div class="rail-label pos-label">+</div>
+            <div class="line-pos"></div>
+            <div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div>
+            <div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div>
+        </div>
+        <div class="power-col">
+            <div class="rail-label neg-label">-</div>
+            <div class="line-neg"></div>
+            <div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div>
+            <div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div>
+        </div>
+    </div>
+
+    <div class="terminal-area" id="bank1">
+        </div>
+
+    <div class="divider"></div>
+
+    <div class="terminal-area" id="bank2">
+        </div>
+
+    <div class="power-rail">
+        <div class="power-col">
+            <div class="rail-label pos-label">+</div>
+            <div class="line-pos"></div>
+            <div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div>
+            <div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div>
+        </div>
+        <div class="power-col">
+            <div class="rail-label neg-label">-</div>
+            <div class="line-neg"></div>
+            <div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div>
+            <div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Simple script to generate the numbered rows to keep HTML clean
+    const rowCount = 30;
+    
+    function createRows(containerId, startLabelChar) {
+        const container = document.getElementById(containerId);
+        
+        for (let i = 1; i <= rowCount; i++) {
+            const row = document.createElement('div');
+            row.className = 'row';
+            
+            // Row Number Label
+            if(containerId === 'bank1') {
+                const label = document.createElement('div');
+                label.className = 'row-label';
+                label.innerText = i;
+                row.appendChild(label);
+            }
+
+            // 5 Holes per row
+            for(let j=0; j<5; j++) {
+                const hole = document.createElement('div');
+                hole.className = 'hole';
+                hole.title = `Row ${i}`;
+                row.appendChild(hole);
+            }
+            
+            // Row Number Label (Right side for bank 2)
+            if(containerId === 'bank2') {
+                 const label = document.createElement('div');
+                label.className = 'row-label';
+                label.style.textAlign = "left";
+                label.style.marginLeft = "5px";
+                label.innerText = i;
+                row.appendChild(label);
+            }
+
+            container.appendChild(row);
+        }
+    }
+
+    createRows('bank1');
+    createRows('bank2');
+
+    // --- COMPONENT DATA ---
+    // Coordinates: bank 'left' (bank1) or 'right' (bank2), row number (1-30), col (index 0-4)
+    // For simplicity in this viz, we map:
+    // 'bank1' -> Left Terminal
+    // 'bank2' -> Right Terminal
+    // 'rail-left' -> Left Power Rail
+    // 'rail-right' -> Right Power Rail
+    
+    const components = [
+        {
+            id: 'esp32',
+            type: 'mcu',
+            label: 'ESP32 DevKit V1',
+            color: 'rgba(50, 50, 50, 0.9)',
+            pins: [
+                // Left Side (USB Up)
+                { bank: 'bank1', row: 1 }, { bank: 'bank1', row: 15 }, 
+                // Right Side
+                { bank: 'bank2', row: 1 }, { bank: 'bank2', row: 15 } 
+            ],
+            // Visual bounding box (start row, end row)
+            range: { start: 1, end: 15 } 
+        },
+        {
+            id: 'opto1',
+            type: 'chip',
+            label: 'PC817 (1)',
+            color: 'black',
+            // Straddle trench at Row 20
+            pins: [
+                { bank: 'bank1', row: 20, index: 2 }, // Pin 1 (Anode)
+                { bank: 'bank1', row: 21, index: 2 }, // Pin 2 (Cathode)
+                { bank: 'bank2', row: 21, index: 2 }, // Pin 3 (Emitter)
+                { bank: 'bank2', row: 20, index: 2 }  // Pin 4 (Collector)
+            ]
+        },
+        {
+            id: 'opto2',
+            type: 'chip',
+            label: 'PC817 (2)',
+            color: 'black',
+            // Straddle trench at Row 23
+            pins: [
+                { bank: 'bank1', row: 23, index: 2 }, 
+                { bank: 'bank1', row: 24, index: 2 },
+                { bank: 'bank2', row: 24, index: 2 }, 
+                { bank: 'bank2', row: 23, index: 2 }
+            ]
+        },
+        {
+            id: 'res1',
+            type: 'resistor',
+            label: '220Ω',
+            color: '#e67e22',
+            from: { bank: 'bank2', row: 11 }, // D18 (D18 is on Right side Row 11 approx)
+            to:   { bank: 'bank1', row: 20 }  // Opto 1 Anode
+        },
+        {
+            id: 'res2',
+            type: 'resistor',
+            label: '220Ω',
+            color: '#e67e22',
+            from: { bank: 'bank2', row: 12 }, // D19 
+            to:   { bank: 'bank1', row: 23 }  // Opto 2 Anode
+        },
+        // Wires to GND Rail
+        {
+            type: 'wire', color: '#333',
+            from: { bank: 'bank1', row: 21 }, // Opto 1 Cathode
+            to:   { bank: 'rail-left', row: 21, idx: 'neg' }
+        },
+        {
+            type: 'wire', color: '#333',
+            from: { bank: 'bank1', row: 24 }, // Opto 2 Cathode
+            to:   { bank: 'rail-left', row: 24, idx: 'neg' }
+        },
+        // Output Wires (To Bike)
+        {
+            type: 'wire', color: '#e74c3c', label: 'To Bike 1',
+            from: { bank: 'bank2', row: 20 }, // Opto 1 Collector
+            to:   { bank: 'rail-right', row: 20, idx: 'pos' } // Just representing 'out'
+        },
+        {
+            type: 'wire', color: '#e74c3c', label: 'To Bike 2',
+            from: { bank: 'bank2', row: 23 }, // Opto 2 Collector
+            to:   { bank: 'rail-right', row: 23, idx: 'pos' } 
+        },
+        {
+            id: 'btn1',
+            type: 'button',
+            label: 'Trigger',
+            color: '#c0392b',
+            // Button is between Row 10 (Bank 2) and GND
+            from: { bank: 'bank2', row: 14 }, // D23
+            to:   { bank: 'rail-right', row: 14, idx: 'neg' } 
+        }
+    ];
+
+    // --- RENDERER ---
+    function getHolePos(bank, row, index) {
+        // Calculate X/Y pixel position of a specific hole
+        const boardRect = document.querySelector('.breadboard').getBoundingClientRect();
+        
+        let container;
+        if (bank === 'bank1') container = document.getElementById('bank1');
+        else if (bank === 'bank2') container = document.getElementById('bank2');
+        else if (bank === 'rail-left') container = document.querySelector('.power-rail:first-child');
+        else if (bank === 'rail-right') container = document.querySelector('.power-rail:last-child');
+        
+        if (!container) return { x: 0, y: 0 };
+
+        // Find the specific hole element
+        // Logic: Banks have rows. Rails have 2 columns.
+        let holeEl;
+        if(bank.includes('bank')) {
+            const rowEl = container.children[row - 1]; // 0-indexed
+            // Index 0-4 are holes, +1 for label in bank1
+            let holeIndex = index;
+            if(bank === 'bank1') holeIndex = index + 1; // Label is first child
+            // bank2 label is last child
+            
+            holeEl = rowEl.children[holeIndex];
+        } else {
+            // Power rail logic (simplified for now)
+            // Just return rough coord
+            const col = (index === 'pos') ? 0 : 1; 
+            const colEl = container.children[col];
+            // Rail holes are just flat list (groups of 5)
+            // Approx row match
+            holeEl = colEl.querySelectorAll('.hole')[row];
+        }
+
+        if(!holeEl) return { x: 0, y: 0 };
+        
+        const rect = holeEl.getBoundingClientRect();
+        return {
+            x: rect.left - boardRect.left + rect.width/2,
+            y: rect.top - boardRect.top + rect.height/2
+        };
+    }
+
+    function renderComponents() {
+        const board = document.querySelector('.breadboard');
+        // Clear existing overlays
+        document.querySelectorAll('.overlay-comp').forEach(e => e.remove());
+
+        components.forEach(comp => {
+            const el = document.createElement('div');
+            el.className = 'overlay-comp';
+            el.style.position = 'absolute';
+            el.style.zIndex = '100';
+            
+            if(comp.type === 'mcu') {
+                el.style.backgroundColor = comp.color;
+                el.style.color = '#fff';
+                el.style.display = 'flex';
+                el.style.justifyContent = 'center';
+                el.style.alignItems = 'center';
+                el.style.borderRadius = '4px';
+                el.innerText = comp.label;
+                
+                // Position logic: Span Rows 1-15 center
+                // Hardcoded adjustment for visual simplicity
+                el.style.top = '65px';
+                el.style.height = '280px';
+                el.style.width = '160px'; 
+                el.style.left = '160px'; // Centered over trench
+                board.appendChild(el);
+            }
+            else if(comp.type === 'chip') {
+                // Optocoupler (4 pin)
+                // Row 20
+                const p1 = getHolePos(comp.pins[0].bank, comp.pins[0].row, 2);
+                el.style.backgroundColor = '#111';
+                el.style.width = '24px';
+                el.style.height = '24px';
+                el.style.borderRadius = '2px';
+                el.style.top = (p1.y - 5) + 'px';
+                el.style.left = (240 - 12) + 'px'; // Center trench
+                el.title = comp.label;
+                
+                // Add white dot for Pin 1
+                const dot = document.createElement('div');
+                dot.style.width = '4px'; dot.style.height = '4px';
+                dot.style.background='#fff'; dot.style.borderRadius='50%';
+                dot.style.position='absolute'; dot.style.top='2px'; dot.style.left='2px';
+                el.appendChild(dot);
+                
+                board.appendChild(el);
+            }
+            else if(comp.type === 'resistor') {
+                // Draw line with "bead" in middle
+                const start = getHolePos(comp.from.bank, comp.from.row, 2);
+                const end = getHolePos(comp.to.bank, comp.to.row, 2);
+                
+                // Simple straight SVG line or div?
+                // Using div line
+                const length = Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2));
+                const angle = Math.atan2(end.y - start.y, end.x - start.x) * 180 / Math.PI;
+                
+                el.style.width = length + 'px';
+                el.style.height = '4px';
+                el.style.background = '#888';
+                el.style.top = start.y + 'px';
+                el.style.left = start.x + 'px';
+                el.style.transformOrigin = '0 0';
+                el.style.transform = `rotate(${angle}deg)`;
+                
+                // Resistor Body
+                const body = document.createElement('div');
+                body.style.width = '14px'; body.style.height = '8px';
+                body.style.background = '#d2b48c'; // Beige
+                body.style.position = 'absolute';
+                body.style.left = (length/2 - 7) + 'px';
+                body.style.top = '-2px';
+                body.style.borderRadius = '4px';
+                // Bands
+                body.innerHTML = `<div style="width:2px;height:100%;background:red;float:left;margin-left:2px"></div>
+                                  <div style="width:2px;height:100%;background:red;float:left;margin-left:2px"></div>
+                                  <div style="width:2px;height:100%;background:brown;float:left;margin-left:2px"></div>`;
+                el.appendChild(body);
+                board.appendChild(el);
+            }
+            else if(comp.type === 'wire') {
+                // Connecting Wire
+                const start = getHolePos(comp.from.bank, comp.from.row, comp.from.idx || 4);
+                const end = getHolePos(comp.to.bank, comp.to.row, comp.to.idx || 4);
+                
+                const length = Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2));
+                const angle = Math.atan2(end.y - start.y, end.x - start.x) * 180 / Math.PI;
+                
+                el.style.width = length + 'px';
+                el.style.height = '3px';
+                el.style.background = comp.color || '#2ecc71';
+                el.style.top = start.y + 'px';
+                el.style.left = start.x + 'px';
+                el.style.transformOrigin = '0 0';
+                el.style.transform = `rotate(${angle}deg)`;
+                el.style.borderRadius = '2px';
+                el.style.opacity = '0.8';
+                
+                board.appendChild(el);
+            }
+        });
+    }
+
+    // Call render
+    // Wait for DOM layout
+    setTimeout(renderComponents, 100);
+    window.addEventListener('resize', renderComponents);
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,70 @@
+graph LR
+    subgraph XIAO [Seeed Studio XIAO ESP32C6]
+        direction TB
+        D0[D0 / GPIO0]
+        D1[D1 / GPIO1]
+        D2[D2 / GPIO2]
+        D3[D3 / GPIO3]
+        GND_ESP[GND]
+        V3V3[3V3]
+        V5V[5V / VBUS]
+    end
+
+    subgraph Opto1 [Optocoupler 1 - Increment]
+        direction TB
+        Anode1[1: Anode (+)]
+        Cathode1[2: Cathode (-)]
+        Coll1[4: Collector]
+        Emit1[3: Emitter]
+    end
+
+    subgraph Opto2 [Optocoupler 2 - Confirm]
+        direction TB
+        Anode2[1: Anode (+)]
+        Cathode2[2: Cathode (-)]
+        Coll2[4: Collector]
+        Emit2[3: Emitter]
+    end
+
+    subgraph Bike [Motorcycle Connections]
+        BTN_INC[Button: Increment Wire]
+        BTN_CONF[Button: Confirm Wire]
+        GND_BIKE[Bike Ground]
+    end
+
+    subgraph Controls [User Controls]
+        TriggerBtn[Trigger Button Switch]
+        BtnLED[Button LED]
+    end
+
+    %% -- Connections --
+
+    %% Opto 1 (Increment) - Active HIGH
+    D0 -- "220Ω Resistor" --> Anode1
+    Cathode1 --> GND_ESP
+    Coll1 --> BTN_INC
+    Emit1 --> GND_BIKE
+
+    %% Opto 2 (Confirm) - Active HIGH
+    D1 -- "220Ω Resistor" --> Anode2
+    Cathode2 --> GND_ESP
+    Coll2 --> BTN_CONF
+    Emit2 --> GND_BIKE
+
+    %% Trigger Button
+    D2 --> TriggerBtn
+    TriggerBtn --> GND_ESP
+
+    %% Button LED (Mirror Status)
+    D3 -- "LED +" --> BtnLED
+    BtnLED -- "LED -" --> GND_ESP
+    
+    %% Note on Button LED
+    %% If the button LED is 12V automotive, D3 might be too dim.
+    %% If it is a raw LED, ADD A RESISTOR (e.g. 220Ω) between D3 and LED +.
+
+    %% Styling
+    style XIAO fill:#f9f,stroke:#333,stroke-width:2px
+    style Opto1 fill:#bbf,stroke:#333,stroke-width:1px
+    style Opto2 fill:#bbf,stroke:#333,stroke-width:1px
+    style Bike fill:#ddd,stroke:#333,stroke-width:2px
